@@ -1,7 +1,8 @@
 # N_TestMap
 Adds option to launch test map instead of regular game.
 
-Since the option is only added during playtest (when starting the game from RPG Maker), it's alright if you forget to remove this plugin before release.
+- Adds the option only when play-testing (when game is launched from RPG Maker), so it's ok to forget to remove the plugin before release (although it's still recommended).
+- Disables autosave for test map.
 
 | Project   | Latest release   |
 | --------- | ---------------- |
