@@ -23,13 +23,13 @@
  */
 
 //=============================================================================
-// N_TestMap
+// Metadata
 //=============================================================================
 /*:
  * @target MZ
  * @plugindesc Adds option to launch test map instead of regular game.
  * @author Nolonar
- * @url https://github.com/Nolonar/RM_Plugins-TestMap
+ * @url https://github.com/Nolonar/RM_Plugins
  * 
  * @param mapId
  * @text Map ID
@@ -53,7 +53,7 @@
  * @default 0
  * 
  * 
- * @help Version 1.0.0
+ * @help Version 1.0.1
  * 
  * This plugin does not provide plugin commands.
  * 
@@ -71,7 +71,17 @@
     parameters.x = Number(parameters.x) || 1;
     parameters.y = Number(parameters.y) || 1;
 
-    let isStartingTestMap = false;
+    class Scene_Test extends Scene_Map {
+        isAutosaveEnabled() {
+            return false;
+        }
+
+        updateTransferPlayer() {
+            if ($gamePlayer.isTransferring()) {
+                SceneManager.goto(Scene_Test);
+            }
+        }
+    }
 
     let Window_TitleCommand_makeCommandList = Window_TitleCommand.prototype.makeCommandList;
     Window_TitleCommand.prototype.makeCommandList = function () {
@@ -85,35 +95,25 @@
     Scene_Title.prototype.createCommandWindow = function () {
         Scene_Title_createCommandWindow.call(this);
         this._commandWindow.setHandler(SYMBOL_TEST, function () {
-            isStartingTestMap = true;
-            this.commandNewGame();
+            DataManager.setupNewGame();
+
+            // Inject testmap coordinates.
+            const mapId = parameters.mapId;
+            const x = parameters.x;
+            const y = parameters.y;
+            $gamePlayer.reserveTransfer(mapId, x, y, 2, 0);
+
+            this._commandWindow.close();
+            this.fadeOutAll();
+            SceneManager.goto(Scene_Test);
         }.bind(this));
     }
 
-    //=========================================================================
-    // Scene_Map
-    //=========================================================================
-    let Scene_Map_isAutosaveEnabled = Scene_Map.prototype.isAutosaveEnabled;
-    Scene_Map.prototype.isAutosaveEnabled = function () {
-        return $gameMap.mapId() !== parameters.mapId // No autosave on test map
-            && Scene_Map_isAutosaveEnabled.call(this);
-    }
-
-    //=========================================================================
-    // Game_Player
-    //=========================================================================
-    let Game_Player_setupForNewGame = Game_Player.prototype.setupForNewGame;
-    Game_Player.prototype.setupForNewGame = function () {
-        if (!isStartingTestMap) {
-            Game_Player_setupForNewGame.call(this);
-            return;
-        }
-
-        const mapId = parameters.mapId;
-        const x = parameters.x;
-        const y = parameters.y;
-        this.reserveTransfer(mapId, x, y, 2, 0);
-
-        isStartingTestMap = false;
-    }
+    const Scene_ItemBase_checkCommonEvent = Scene_ItemBase.prototype.checkCommonEvent;
+    Scene_ItemBase.prototype.checkCommonEvent = function () {
+        if (!(SceneManager._scene instanceof Scene_Test))
+            Scene_ItemBase_checkCommonEvent.call(this);
+        else if ($gameTemp.isCommonEventReserved())
+            SceneManager.goto(Scene_Test);
+    };
 })();
