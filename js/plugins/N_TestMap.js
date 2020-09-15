@@ -53,7 +53,7 @@
  * @default 0
  * 
  * 
- * @help Version 1.0.1
+ * @help Version 1.0.2
  * 
  * This plugin does not provide plugin commands.
  * 
@@ -95,16 +95,8 @@
     Scene_Title.prototype.createCommandWindow = function () {
         Scene_Title_createCommandWindow.call(this);
         this._commandWindow.setHandler(SYMBOL_TEST, function () {
-            DataManager.setupNewGame();
-
-            // Inject testmap coordinates.
-            const mapId = parameters.mapId;
-            const x = parameters.x;
-            const y = parameters.y;
-            $gamePlayer.reserveTransfer(mapId, x, y, 2, 0);
-
-            this._commandWindow.close();
-            this.fadeOutAll();
+            this.commandNewGame.call(this);
+            $gamePlayer.reserveTransfer(parameters.mapId, parameters.x, parameters.y, 2, 0);
             SceneManager.goto(Scene_Test);
         }.bind(this));
     }
